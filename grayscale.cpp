@@ -24,7 +24,7 @@ string getFileExtension(const string &filename)
 {
     size_t dotPos = filename.find_last_of(".");
     if (dotPos == string::npos)
-        return ""; // No extension found
+        return "";
     return filename.substr(dotPos + 1);
 }
 
@@ -57,7 +57,7 @@ int main()
     cout << "Initial memory usage: " << initialMemory << " KB" << endl;
 
     string filename;
-    cout << "Enter the image filename (Supported formats: JPG, JPEG, PNG, BMP, TGA, GIF, PSD, HDR, PIC, PNM, TIFF, WEBP): ";
+    cout << "Enter the image filename: ";
     cin >> filename;
 
     int width, height, channels;
@@ -74,6 +74,7 @@ int main()
     unsigned char *grayImgSeq = new unsigned char[width * height];
     unsigned char *grayImgPar = new unsigned char[width * height];
 
+    // sequential
     size_t beforeSeqMem = getCurrentMemoryUsage();
     double startSeq = omp_get_wtime();
     sequentialGrayscale(img, grayImgSeq, width, height, channels);
@@ -86,6 +87,7 @@ int main()
     cout << "Memory after: " << afterSeqMem << " KB" << endl;
     cout << "Memory difference: " << (afterSeqMem - beforeSeqMem) << " KB" << endl;
 
+    // parellel
     size_t beforeParMem = getCurrentMemoryUsage();
     double startPar = omp_get_wtime();
     parallelGrayscale(img, grayImgPar, width, height, channels);
@@ -98,6 +100,7 @@ int main()
     cout << "Memory after: " << afterParMem << " KB" << endl;
     cout << "Memory difference: " << (afterParMem - beforeParMem) << " KB" << endl;
 
+    // save
     string extension = getFileExtension(filename);
     string outputFilenameSeq = "grayscale_seq." + extension;
     string outputFilenamePar = "grayscale_par." + extension;
@@ -107,28 +110,10 @@ int main()
         stbi_write_png(outputFilenameSeq.c_str(), width, height, 1, grayImgSeq, width);
         stbi_write_png(outputFilenamePar.c_str(), width, height, 1, grayImgPar, width);
     }
-    else if (extension == "jpg" || extension == "jpeg")
+    else
     {
         stbi_write_jpg(outputFilenameSeq.c_str(), width, height, 1, grayImgSeq, 100);
         stbi_write_jpg(outputFilenamePar.c_str(), width, height, 1, grayImgPar, 100);
-    }
-    else if (extension == "bmp")
-    {
-        stbi_write_bmp(outputFilenameSeq.c_str(), width, height, 1, grayImgSeq);
-        stbi_write_bmp(outputFilenamePar.c_str(), width, height, 1, grayImgPar);
-    }
-    else if (extension == "tga")
-    {
-        stbi_write_tga(outputFilenameSeq.c_str(), width, height, 1, grayImgSeq);
-        stbi_write_tga(outputFilenamePar.c_str(), width, height, 1, grayImgPar);
-    }
-    else
-    {
-        cout << "Format " << extension << " is not directly supported for saving. Saving as PNG instead." << endl;
-        outputFilenameSeq = "grayscale_seq.png";
-        outputFilenamePar = "grayscale_par.png";
-        stbi_write_png(outputFilenameSeq.c_str(), width, height, 1, grayImgSeq, width);
-        stbi_write_png(outputFilenamePar.c_str(), width, height, 1, grayImgPar, width);
     }
 
     cout << "\nGrayscale images saved as " << outputFilenameSeq << " and " << outputFilenamePar << endl;
@@ -139,7 +124,8 @@ int main()
 
     cout << "\nFinal memory usage: " << getCurrentMemoryUsage() << " KB" << endl;
 
-    cout << "\nDATA_START\n";
+    // o/p for py
+    cout << "\n-------Data Start-------" << endl;
     cout << initialMemory << endl;
     cout << width << endl;
     cout << height << endl;
@@ -151,7 +137,7 @@ int main()
     cout << afterParMem << endl;
     cout << (endPar - startPar) << endl;
     cout << getCurrentMemoryUsage() << endl;
-    cout << "DATA_END\n";
+    cout << "-------Data End-------" << endl;
 
     return 0;
 }
